@@ -53,6 +53,7 @@ if (!$res) {
 }
 
 // Libraries
+require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions.lib.php';
 
 // Global variables definitions
@@ -74,6 +75,58 @@ if (!$permissiontoread) accessforbidden();
 /*
  *  Actions
 */
+
+if (GETPOST('dataMigrationImportGlobalDolibarr', 'alpha') && ! empty($conf->global->MAIN_UPLOAD_DOC)) {
+    // Submit file
+    if ( ! empty($_FILES)) {
+        if ( ! preg_match('/FDS.zip/', $_FILES['dataMigrationImportGlobalDolibarrfile']['name'][0]) || $_FILES['dataMigrationImportGlobalDolibarrfile']['size'][0] < 1) {
+            setEventMessages($langs->trans('ErrorFileNotWellFormattedZIP'), null, 'errors');
+        } else {
+            if (is_array($_FILES['dataMigrationImportGlobalDolibarrfile']['tmp_name'])) $userfiles = $_FILES['dataMigrationImportGlobalDolibarrfile']['tmp_name'];
+            else $userfiles                                                               = array($_FILES['dataMigrationImportGlobalDolibarrfile']['tmp_name']);
+
+            foreach ($userfiles as $key => $userfile) {
+                if (empty($_FILES['dataMigrationImportGlobalDolibarrfile']['tmp_name'][$key])) {
+                    $error++;
+                    if ($_FILES['dataMigrationImportGlobalDolibarrfile']['error'][$key] == 1 || $_FILES['dataMigrationImportGlobalDolibarrfile']['error'][$key] == 2) {
+                        setEventMessages($langs->trans('ErrorFileSizeTooLarge'), null, 'errors');
+                    } else {
+                        setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("File")), null, 'errors');
+                    }
+                }
+            }
+
+            if ( ! $error) {
+                $filedir = $upload_dir . '/temp/';
+                if ( ! empty($filedir)) {
+                    $result = dol_add_file_process($filedir, 0, 1, 'dataMigrationImportGlobalDolibarrfile', '', null, '', 0, null);
+                }
+            }
+
+            if ($result > 0) {
+                $zip = new ZipArchive;
+                if ($zip->open($filedir . $_FILES['dataMigrationImportGlobalDolibarrfile']['name'][0]) === TRUE) {
+                    $zip->extractTo($filedir);
+                    $zip->close();
+                }
+            }
+
+            $fileImportGlobals = dol_dir_list($filedir, "files", 0, 'pdf', '', '', '', 1);
+            echo '<pre>'; print_r( $fileImportGlobals ); echo '</pre>'; exit;
+
+            
+//            $json                = file_get_contents($filedir . $filename);
+//            $digiriskExportArray = json_decode($json, true);
+        }
+
+//        $fileImportGlobals = dol_dir_list($filedir, "files", 0, '', '', '', '', 1);
+//        if ( ! empty($fileImportGlobals)) {
+//            foreach ($fileImportGlobals as $fileImportGlobal) {
+//                unlink($fileImportGlobal['fullname']);
+//            }
+//        }
+    }
+}
 
 if ($action == 'convertTxtToCSV') {
     $pdffilename    = GETPOST('pdffilename');
@@ -152,11 +205,42 @@ print load_fiche_titre($langs->trans('SecurityProblem'), '', ''); ?>
 
 <textarea id='inputText'></textarea>
 
+<?php
+print load_fiche_titre($langs->trans("UploadFiles"), '', '');
+
+print '<form class="data-migration-from" name="DataMigration" id="DataMigration" action="' . $_SERVER["PHP_SELF"] . '" enctype="multipart/form-data" method="POST">';
+print '<input type="hidden" name="token" value="' . newToken() . '">';
+print '<input type="hidden" name="action" value="">';
+
+print '<table class="noborder centpercent">';
+print '<tr class="liste_titre">';
+print '<td>' . $langs->trans("Name") . '</td>';
+print '<td>' . $langs->trans("Description") . '</td>';
+print '<td class="center">' . $langs->trans("Action") . '</td>';
+print '</tr>';
+
+// Import data from Dolibarr
+print '<tr class="oddeven"><td>';
+print $langs->trans('DataMigrationImportGlobal');
+print "</td><td>";
+print $langs->trans('DataMigrationImportGlobalDolibarrDescription');
+print '</td>';
+
+print '<td class="center data-migration-import-global-dolibarr">';
+print '<input class="flat" type="file" name="dataMigrationImportGlobalDolibarrfile[]" id="data-migration-import-global-dolibarr" />';
+print '<input type="submit" class="button reposition data-migration-submit" name="dataMigrationImportGlobalDolibarr" value="' . $langs->trans("Upload") . '">';
+print '</td>';
+print '</tr>';
+print '</table>';
+print '</form>';
+
+?>
+
 <!--<script src='https://unpkg.com/tesseract.js@4.0.0/dist/tesseract.min.js'></script>-->
 <!--<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.1.81/build/pdf.min.js"></script>-->
-<script src="<?php echo DOL_URL_ROOT . '/custom/doliocr/js/tesseract/tesseract.min.js'; ?>"></script>
-<script src="<?php echo DOL_URL_ROOT . '/custom/doliocr/js/pdf/pdf.min.js'; ?>"></script>
-<script src="<?php echo DOL_URL_ROOT . '/custom/doliocr/js/doliocr.js'; ?>"></script>
+<!--<script src="--><?php //echo DOL_URL_ROOT . '/custom/doliocr/js/tesseract/tesseract.min.js'; ?><!--"></script>-->
+<!--<script src="--><?php //echo DOL_URL_ROOT . '/custom/doliocr/js/pdf/pdf.min.js'; ?><!--"></script>-->
+<!--<script src="--><?php //echo DOL_URL_ROOT . '/custom/doliocr/js/doliocr.js'; ?><!--"></script>-->
 
 <?php
 // End of page
