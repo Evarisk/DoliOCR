@@ -1,0 +1,57 @@
+# Copyright (C) 2022 EVARISK <dev@evarisk.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#
+# Générique
+#
+
+# Module label 'ModuleDoliOCRName'
+ModuleDoliOCRName = DoliOCR
+# Module description 'ModuleDoliOCRDesc'
+ModuleDoliOCRDesc = Corrigez vos problèmes de sécurité facilement et rapidement
+
+#
+# Page d'administration
+#
+DoliOCRSetup = Configuration du module DoliOCR
+Settings = Réglages
+DoliOCRSetupPage = Page de configuration du module DoliOCR
+
+#
+# Page À propos
+#
+About = À propos
+DoliOCRAbout = À propos de DoliOCR
+
+#
+# DoliOCR
+#
+
+# Right - Droit
+LireDoliOCR = Consulter DoliOCR
+ReadDoliOCR = Consulter DoliOCR (read)
+ReadAdminPage = Accéder à la configuration du module DoliOCR
+
+#
+# Index
+#
+
+# Data - Donnée
+DoliOCRArea  = Bienvenue sur DoliOCR
+SecurityProblem = Problème de sécurité
+ReadFile = Fichier lu
+ParsedFile = Fichier interprété
+SuccessGenerateCSV = Fichier CSV %s généré avec succès
+ErrorMissingData = Erreur : impossible de générer le fichier CSV, les données envoyées au fichier sont incorrecte. <br> Veuillez vérifier que vous avez bien un fichier CSV de recherche.

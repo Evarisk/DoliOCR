@@ -1,0 +1,7 @@
+div.mainmenu.doliocr {
+    background-image: none;
+}
+
+div.mainmenu.doliocr::before {
+    content: "\f023";
+}
