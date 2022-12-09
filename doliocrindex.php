@@ -183,6 +183,68 @@ if ($action == 'convertTxtToCSV') {
     exit;
 }
 
+if ($action == 'convertTxtToCSVAfterOCR') {
+    $searchfilename = 'test.csv';
+
+    $txtfilesarray = dol_dir_list($upload_dir, "files", 0, 'txt', '', 'position_name', 'desc', 1);
+    
+    if (is_array($txtfilesarray) && !empty($txtfilesarray)) {
+        foreach ($txtfilesarray as $txtfile) {
+            // Open the file
+            $readFile = fopen($upload_dir . '/' . $txtfile['name'], 'r');
+
+            // Convert Txt to Array
+            if ($readFile) {
+                $txtsArray[$txtfile['name']] = fread($readFile, filesize($upload_dir . '/' . $txtfile['name']));
+            }
+            fclose($readFile);
+        }
+    }
+    
+    // Open the file
+    $readFile = fopen($upload_dir . '/' . $searchfilename, 'r');
+    if ($readFile) {
+        while (!feof($readFile)) {
+            $searchArray = fgetcsv($readFile, 1000, ',');
+        }
+    }
+    fclose($readFile);
+
+    // Count number of occurences for serchValue in txtArray provide by searchArray
+    $searchArray = explode(';', $searchArray[0]);
+    foreach ($searchArray as $serchValue) {
+        if (is_array($txtsArray) && !empty($txtsArray)) {
+            foreach ($txtsArray as $key => $txtArray) {
+                $csvArray[$key]['pdffilename'] = preg_replace('/\.txt/', '.pdf', $key);
+                $csvArray[$key]['txtfilename'] = $key;
+                $csvArray[$key][$serchValue] = substr_count($txtArray, $serchValue);
+            }
+        }
+    }
+
+    // Open a file in write mode ('w')
+    $now = dol_now();
+    $csvfilename = dol_print_date($now, 'dayxcard') . '_result.csv';
+
+    $readFile = fopen($upload_dir . '/' . $csvfilename, 'w');
+
+    if (is_array($csvArray) && !empty($csvArray)) {
+        // Loop through file pointer and a line
+        $header = [$langs->trans('ReadFile'), $langs->transnoentities('ParsedFile')];
+        $headerArray = array_merge($header, $searchArray);
+        fputcsv($readFile, $headerArray);
+        $i = 0;
+        foreach ($csvArray as $dataArray) {
+            fputcsv($readFile, array_values($dataArray));
+            $i++;
+        }
+        setEventMessages($langs->trans('SuccessGenerateCSV', $csvfilename), []);
+    } else {
+        setEventMessages($langs->trans('ErrorMissingData'), [], 'errors');
+    }
+    fclose($readFile);
+    exit;
+}
 
 /*
  * View
@@ -201,46 +263,52 @@ print load_fiche_titre($langs->trans('SecurityProblem'), '', ''); ?>
 
 <input type='hidden' id="token" value="<?php echo newToken(); ?>" />
 <input id='uploadSerchCSV' type='file' />
-<input id='uploadPDF' type='file' />
+<input id='uploadPDF' type='file' multiple/>
 
 <textarea id='inputText'></textarea>
 
 <?php
-print load_fiche_titre($langs->trans("UploadFiles"), '', '');
 
-print '<form class="data-migration-from" name="DataMigration" id="DataMigration" action="' . $_SERVER["PHP_SELF"] . '" enctype="multipart/form-data" method="POST">';
+print '<form class="data-migration-from" name="DataMigration" id="DataMigration" action="' . $_SERVER["PHP_SELF"] . '">';
 print '<input type="hidden" name="token" value="' . newToken() . '">';
-print '<input type="hidden" name="action" value="">';
-
-print '<table class="noborder centpercent">';
-print '<tr class="liste_titre">';
-print '<td>' . $langs->trans("Name") . '</td>';
-print '<td>' . $langs->trans("Description") . '</td>';
-print '<td class="center">' . $langs->trans("Action") . '</td>';
-print '</tr>';
-
-// Import data from Dolibarr
-print '<tr class="oddeven"><td>';
-print $langs->trans('DataMigrationImportGlobal');
-print "</td><td>";
-print $langs->trans('DataMigrationImportGlobalDolibarrDescription');
-print '</td>';
-
-print '<td class="center data-migration-import-global-dolibarr">';
-print '<input class="flat" type="file" name="dataMigrationImportGlobalDolibarrfile[]" id="data-migration-import-global-dolibarr" />';
+print '<input type="hidden" name="action" value="convertTxtToCSVAfterOCR">';
 print '<input type="submit" class="button reposition data-migration-submit" name="dataMigrationImportGlobalDolibarr" value="' . $langs->trans("Upload") . '">';
-print '</td>';
-print '</tr>';
-print '</table>';
-print '</form>';
+
+//print load_fiche_titre($langs->trans("UploadFiles"), '', '');
+//
+//print '<form class="data-migration-from" name="DataMigration" id="DataMigration" action="' . $_SERVER["PHP_SELF"] . '" enctype="multipart/form-data" method="POST">';
+//print '<input type="hidden" name="token" value="' . newToken() . '">';
+//print '<input type="hidden" name="action" value="">';
+//
+//print '<table class="noborder centpercent">';
+//print '<tr class="liste_titre">';
+//print '<td>' . $langs->trans("Name") . '</td>';
+//print '<td>' . $langs->trans("Description") . '</td>';
+//print '<td class="center">' . $langs->trans("Action") . '</td>';
+//print '</tr>';
+//
+//// Import data from Dolibarr
+//print '<tr class="oddeven"><td>';
+//print $langs->trans('DataMigrationImportGlobal');
+//print "</td><td>";
+//print $langs->trans('DataMigrationImportGlobalDolibarrDescription');
+//print '</td>';
+//
+//print '<td class="center data-migration-import-global-dolibarr">';
+//print '<input class="flat" type="file" name="dataMigrationImportGlobalDolibarrfile[]" id="data-migration-import-global-dolibarr" />';
+//print '<input type="submit" class="button reposition data-migration-submit" name="dataMigrationImportGlobalDolibarr" value="' . $langs->trans("Upload") . '">';
+//print '</td>';
+//print '</tr>';
+//print '</table>';
+//print '</form>';
 
 ?>
 
 <!--<script src='https://unpkg.com/tesseract.js@4.0.0/dist/tesseract.min.js'></script>-->
 <!--<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.1.81/build/pdf.min.js"></script>-->
-<!--<script src="--><?php //echo DOL_URL_ROOT . '/custom/doliocr/js/tesseract/tesseract.min.js'; ?><!--"></script>-->
-<!--<script src="--><?php //echo DOL_URL_ROOT . '/custom/doliocr/js/pdf/pdf.min.js'; ?><!--"></script>-->
-<!--<script src="--><?php //echo DOL_URL_ROOT . '/custom/doliocr/js/doliocr.js'; ?><!--"></script>-->
+<script src="<?php echo DOL_URL_ROOT . '/custom/doliocr/js/tesseract/tesseract.min.js'; ?>"></script>
+<script src="<?php echo DOL_URL_ROOT . '/custom/doliocr/js/pdf/pdf.min.js'; ?>"></script>
+<script src="<?php echo DOL_URL_ROOT . '/custom/doliocr/js/doliocr.js'; ?>"></script>
 
 <?php
 // End of page
